@@ -341,18 +341,21 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		return nil, rawErr.(error)
 	}
 
-	// If there are no AMIs, then just return
-	if _, ok := state.GetOk("amis"); !ok {
-		return nil, nil
+	if amis, ok := state.GetOk("amis"); ok {
+		if b.config.AMISkipBuildRegion {
+			delete(amis.(map[string]string), *ec2conn.Config.Region)
+		}
+
+		// Build the artifact and return it
+		artifact := &awscommon.Artifact{
+			Amis:           amis.(map[string]string),
+			BuilderIdValue: BuilderId,
+			Session:        session,
+			StateData:      map[string]interface{}{"generated_data": state.Get("generated_data")},
+		}
+
+		return artifact, nil
 	}
 
-	// Build the artifact and return it
-	artifact := &awscommon.Artifact{
-		Amis:           state.Get("amis").(map[string]string),
-		BuilderIdValue: BuilderId,
-		Session:        session,
-		StateData:      map[string]interface{}{"generated_data": state.Get("generated_data")},
-	}
-
-	return artifact, nil
+	return nil, nil
 }
