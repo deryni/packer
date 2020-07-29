@@ -379,6 +379,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	if amis, ok := state.GetOk("amis"); ok {
+		if b.config.AMISkipBuildRegion {
+			delete(amis.(map[string]string), *ec2conn.Config.Region)
+		}
+
 		// Build the artifact and return it
 		artifact := &awscommon.Artifact{
 			Amis:           amis.(map[string]string),
