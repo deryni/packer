@@ -363,9 +363,11 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			GeneratedData:  generatedData,
 		},
 		&awscommon.StepCreateTags{
-			Tags:         b.config.AMITags,
-			SnapshotTags: b.config.SnapshotTags,
-			Ctx:          b.config.ctx,
+			Tags:               b.config.AMITags,
+			SnapshotTags:       b.config.SnapshotTags,
+			Ctx:                b.config.ctx,
+			OriginalRegion:     *ec2conn.Config.Region,
+			AMISkipBuildRegion: b.config.AMISkipBuildRegion,
 		},
 	}
 

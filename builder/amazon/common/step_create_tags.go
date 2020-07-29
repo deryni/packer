@@ -15,9 +15,12 @@ import (
 )
 
 type StepCreateTags struct {
-	Tags         map[string]string
-	SnapshotTags map[string]string
-	Ctx          interpolate.Context
+	Tags           map[string]string
+	SnapshotTags   map[string]string
+	Ctx            interpolate.Context
+	OriginalRegion string
+
+	AMISkipBuildRegion bool
 }
 
 func (s *StepCreateTags) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -32,6 +35,9 @@ func (s *StepCreateTags) Run(ctx context.Context, state multistep.StateBag) mult
 
 	// Adds tags to AMIs and snapshots
 	for region, ami := range amis {
+		if s.AMISkipBuildRegion && region == s.OriginalRegion {
+			continue
+		}
 		ui.Say(fmt.Sprintf("Adding tags to AMI (%s)...", ami))
 
 		regionConn := ec2.New(session, &aws.Config{
